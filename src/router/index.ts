@@ -72,9 +72,9 @@ const routes = [
     meta: { requiresAuth: true, requiresAdmin: true },
     children: [
       {
-        path: '',
+        path: '', 
         name: 'admin-dashboard',
-        redirect: '/admin/products'
+        component: () => import('@/views/admin/AdminDashboard.vue')
       },
       { 
         path: 'products',   

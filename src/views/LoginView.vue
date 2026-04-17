@@ -157,7 +157,7 @@ const handleLogin = async () => {
     await authStore.login(form.value)
     
     if (authStore.user?.role === 'admin') {
-      router.push('/admin/products')
+      router.push('/admin')
     } else {
       router.push('/')
     }

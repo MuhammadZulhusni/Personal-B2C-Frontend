@@ -156,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue' // add onMounted, onUnmounted
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
@@ -212,4 +212,14 @@ if (typeof window !== 'undefined') {
     }
   })
 }
+
+onMounted(() => {
+  document.body.style.margin = '0'
+  document.body.style.padding = '0'
+})
+
+onUnmounted(() => {
+  document.body.style.margin = ''
+  document.body.style.padding = ''
+})
 </script>

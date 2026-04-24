@@ -31,6 +31,13 @@
         />
       </div>
       <select 
+        v-model="categoryFilter"
+        class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-auto"
+      >
+        <option value="">All Categories</option>
+        <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+      </select>
+      <select 
         v-model="stockFilter"
         class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-auto"
       >
@@ -61,7 +68,13 @@
             class="w-full h-full object-cover"
             @error="handleImageError"
           />
-          <div class="absolute top-3 right-3">
+          <div class="absolute top-3 right-3 flex gap-1">
+            <span 
+              v-if="product.category"
+              class="px-2 py-1 rounded-full text-xs font-medium shadow-sm bg-purple-100 text-purple-700"
+            >
+              {{ product.category }}
+            </span>
             <span 
               :class="[
                 'px-2 py-1 rounded-full text-xs font-medium shadow-sm',
@@ -75,6 +88,14 @@
         
         <div class="p-5">
           <h3 class="font-semibold text-gray-800 text-lg mb-1">{{ product.name }}</h3>
+          
+          <span 
+            v-if="product.category"
+            class="inline-block px-2 py-0.5 bg-purple-50 text-purple-700 text-xs rounded-full mb-2"
+          >
+            {{ product.category }}
+          </span>
+          
           <p class="text-sm text-gray-500 mb-3 line-clamp-2">{{ product.description }}</p>
           
           <div class="flex items-center justify-between mb-4">
@@ -97,7 +118,7 @@
             </button>
             <button 
               class="flex-1 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium rounded-lg transition-colors"
-              @click="deleteProduct(product.id)"
+              @click="confirmDelete(product)"
             >
               Delete
             </button>
@@ -120,130 +141,13 @@
         Add Product
       </button>
     </div>
-
-    <!-- Modal -->
-    <Teleport to="body">
-      <div 
-        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-        v-if="showModal" 
-        @click.self="showModal = false"
-      >
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-          <div class="p-6">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">
-              {{ editingProduct ? 'Edit Product' : 'Add New Product' }}
-            </h3>
-
-            <!-- Error Alert -->
-            <div 
-              v-if="formError" 
-              class="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm"
-            >
-              {{ formError }}
-            </div>
-
-            <!-- Form Fields -->
-            <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                  Product Name <span class="text-red-500">*</span>
-                </label>
-                <input 
-                  v-model="form.name" 
-                  type="text"
-                  placeholder="e.g., Wireless Headphones"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
-                <textarea 
-                  v-model="form.description" 
-                  rows="3"
-                  placeholder="Product description..."
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                ></textarea>
-              </div>
-
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Price (RM) <span class="text-red-500">*</span>
-                  </label>
-                  <input 
-                    v-model.number="form.price" 
-                    type="number" 
-                    step="0.01"
-                    min="0"
-                    placeholder="0.00"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Stock <span class="text-red-500">*</span>
-                  </label>
-                  <input 
-                    v-model.number="form.stock" 
-                    type="number"
-                    min="0"
-                    placeholder="0"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                  Image URL
-                </label>
-                <input 
-                  v-model="form.image" 
-                  type="text"
-                  placeholder="https://example.com/image.jpg"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <!-- Image Preview -->
-                <div v-if="form.image" class="mt-2">
-                  <img 
-                    :src="form.image" 
-                    alt="Preview" 
-                    class="w-20 h-20 object-cover rounded-lg border border-gray-200"
-                    @error="handlePreviewError"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <!-- Modal Actions -->
-            <div class="flex gap-3 mt-6">
-              <button 
-                class="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-                @click="showModal = false"
-              >
-                Cancel
-              </button>
-              <button 
-                class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                @click="saveProduct" 
-                :disabled="saving"
-              >
-                {{ saving ? 'Saving...' : (editingProduct ? 'Update Product' : 'Create Product') }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import Swal from 'sweetalert2'
+import 'sweetalert2/dist/sweetalert2.min.css'
 import api from '@/api'
 
 interface Product {
@@ -253,34 +157,44 @@ interface Product {
   price: number
   stock: number
   image: string
+  category?: string
 }
+
+const categories = ref([
+  'Electronics',
+  'Fashion',
+  'Sports',
+  'Books',
+  'Toys',
+  'Food & Beverages',
+  'Health & Beauty',
+  'Automotive',
+])
 
 const products = ref<Product[]>([])
 const loading = ref(true)
-const showModal = ref(false)
-const saving = ref(false)
-const formError = ref('')
-const editingProduct = ref<Product | null>(null)
 const searchQuery = ref('')
+const categoryFilter = ref('')
 const stockFilter = ref('')
 
-const form = ref({ 
-  name: '', 
-  description: '', 
-  price: 0, 
-  stock: 0, 
-  image: '' 
+// SweetAlert2 Toast
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
 })
 
-// Filtered products based on search and stock filter
 const filteredProducts = computed(() => {
   return products.value.filter(product => {
-    // Search filter
     const matchesSearch = searchQuery.value === '' || 
       product.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       product.description.toLowerCase().includes(searchQuery.value.toLowerCase())
     
-    // Stock filter
+    const matchesCategory = categoryFilter.value === '' || 
+      product.category === categoryFilter.value
+    
     let matchesStock = true
     if (stockFilter.value === 'in_stock') {
       matchesStock = product.stock > 10
@@ -290,39 +204,30 @@ const filteredProducts = computed(() => {
       matchesStock = product.stock === 0
     }
     
-    return matchesSearch && matchesStock
+    return matchesSearch && matchesCategory && matchesStock
   })
 })
 
-// Helper function to safely format prices
 const formatPrice = (price: any): string => {
   const numPrice = typeof price === 'string' ? parseFloat(price) : price
   return isNaN(numPrice) ? '0.00' : numPrice.toFixed(2)
 }
 
-// Get stock status class
 const getStockClass = (stock: number): string => {
   if (stock === 0) return 'bg-red-100 text-red-700'
   if (stock <= 10) return 'bg-yellow-100 text-yellow-700'
   return 'bg-green-100 text-green-700'
 }
 
-// Get stock status label
 const getStockLabel = (stock: number): string => {
   if (stock === 0) return 'Out of Stock'
   if (stock <= 10) return 'Low Stock'
   return 'In Stock'
 }
 
-// Handle image loading errors
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement
   img.src = 'https://via.placeholder.com/400x300?text=No+Image'
-}
-
-const handlePreviewError = (event: Event) => {
-  const img = event.target as HTMLImageElement
-  img.src = 'https://via.placeholder.com/80x80?text=Invalid+URL'
 }
 
 const fetchProducts = async () => {
@@ -331,59 +236,213 @@ const fetchProducts = async () => {
     const { data } = await api.get('/admin/products')
     products.value = data.data
   } catch (error) {
-    console.error('Failed to fetch products:', error)
+    Toast.fire({ icon: 'error', title: 'Failed to load products' })
   } finally {
     loading.value = false
   }
 }
 
+// Build the HTML string for the SweetAlert2 product form
+const buildFormHtml = (product: Product | null) => {
+  const categoryOptions = categories.value
+    .map(cat => `<option value="${cat}" ${product?.category === cat ? 'selected' : ''}>${cat}</option>`)
+    .join('')
+
+  return `
+    <style>
+      .swal-product-form { text-align: left; }
+      .swal-product-form label { display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; }
+      .swal-product-form .required { color: #ef4444; }
+      .swal-product-form input,
+      .swal-product-form select,
+      .swal-product-form textarea {
+        width: 100%;
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        box-sizing: border-box;
+        margin-bottom: 1rem;
+        color: #1f2937;
+      }
+      .swal-product-form input:focus,
+      .swal-product-form select:focus,
+      .swal-product-form textarea:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+      }
+      .swal-product-form .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+      .swal-product-form .grid-2 input { margin-bottom: 0; }
+      .swal-product-form textarea { resize: none; }
+      .swal-product-form .form-error {
+        background: #fef2f2;
+        color: #dc2626;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.8rem;
+        margin-bottom: 1rem;
+        display: none;
+      }
+      .swal-product-form #img-preview {
+        width: 72px; height: 72px; object-fit: cover;
+        border-radius: 0.5rem; border: 1px solid #e5e7eb;
+        margin-top: 0.4rem; display: none;
+      }
+    </style>
+    <div class="swal-product-form">
+      <div id="swal-form-error" class="form-error"></div>
+
+      <label>Product Name <span class="required">*</span></label>
+      <input id="swal-name" type="text" placeholder="e.g., Wireless Headphones" value="${product?.name ?? ''}" />
+
+      <label>Category <span class="required">*</span></label>
+      <select id="swal-category">
+        <option value="">Select category...</option>
+        ${categoryOptions}
+      </select>
+
+      <label>Description</label>
+      <textarea id="swal-description" rows="3" placeholder="Product description...">${product?.description ?? ''}</textarea>
+
+      <div class="grid-2">
+        <div>
+          <label>Price (RM) <span class="required">*</span></label>
+          <input id="swal-price" type="number" step="0.01" min="0" placeholder="0.00" value="${product?.price ?? ''}" />
+        </div>
+        <div>
+          <label>Stock <span class="required">*</span></label>
+          <input id="swal-stock" type="number" min="0" placeholder="0" value="${product?.stock ?? ''}" />
+        </div>
+      </div>
+
+      <label>Image URL</label>
+      <input id="swal-image" type="text" placeholder="https://example.com/image.jpg" value="${product?.image ?? ''}" />
+      <img id="img-preview" src="" alt="Preview" />
+    </div>
+  `
+}
+
+// Open SweetAlert2 modal for Add / Edit
 const openModal = (product: Product | null = null) => {
-  editingProduct.value = product
-  formError.value = ''
-  
-  if (product) {
-    form.value = { ...product }
-  } else {
-    form.value = { name: '', description: '', price: 0, stock: 0, image: '' }
-  }
-  
-  showModal.value = true
-}
+  Swal.fire({
+    title: product ? 'Edit Product' : 'Add New Product',
+    html: buildFormHtml(product),
+    width: 560,
+    showCancelButton: true,
+    confirmButtonColor: '#2563eb',
+    cancelButtonColor: '#64748b',
+    confirmButtonText: product ? 'Update Product' : 'Create Product',
+    cancelButtonText: 'Cancel',
+    reverseButtons: true,
+    focusConfirm: false,
+    didOpen: () => {
+      // Live image preview
+      const imageInput = document.getElementById('swal-image') as HTMLInputElement
+      const imgPreview = document.getElementById('img-preview') as HTMLImageElement
 
-const saveProduct = async () => {
-  // Validation
-  if (!form.value.name || form.value.price <= 0 || form.value.stock < 0) {
-    formError.value = 'Please fill in all required fields with valid values.'
-    return
-  }
+      const updatePreview = () => {
+        const url = imageInput.value.trim()
+        if (url) {
+          imgPreview.style.display = 'block'
+          imgPreview.src = url
+          imgPreview.onerror = () => {
+            imgPreview.src = 'https://via.placeholder.com/80x80?text=Invalid+URL'
+          }
+        } else {
+          imgPreview.style.display = 'none'
+        }
+      }
 
-  saving.value = true
-  formError.value = ''
-  
-  try {
-    if (editingProduct.value) {
-      await api.put(`/admin/products/${editingProduct.value.id}`, form.value)
-    } else {
-      await api.post('/admin/products', form.value)
+      imageInput.addEventListener('input', updatePreview)
+      // Show preview immediately if editing with existing image
+      if (product?.image) updatePreview()
+    },
+    preConfirm: async () => {
+      const name     = (document.getElementById('swal-name') as HTMLInputElement).value.trim()
+      const category = (document.getElementById('swal-category') as HTMLSelectElement).value
+      const description = (document.getElementById('swal-description') as HTMLTextAreaElement).value.trim()
+      const price    = parseFloat((document.getElementById('swal-price') as HTMLInputElement).value)
+      const stock    = parseInt((document.getElementById('swal-stock') as HTMLInputElement).value)
+      const image    = (document.getElementById('swal-image') as HTMLInputElement).value.trim()
+
+      const errorEl = document.getElementById('swal-form-error') as HTMLElement
+
+      const showError = (msg: string) => {
+        errorEl.textContent = msg
+        errorEl.style.display = 'block'
+        Swal.resetValidationMessage()
+        return false
+      }
+
+      if (!name) return showError('Product name is required.')
+      if (!category) return showError('Please select a category.')
+      if (isNaN(price) || price <= 0) return showError('Please enter a valid price greater than 0.')
+      if (isNaN(stock) || stock < 0) return showError('Stock must be 0 or greater.')
+
+      errorEl.style.display = 'none'
+
+      const payload = { name, category, description, price, stock, image }
+
+      try {
+        if (product) {
+          await api.put(`/admin/products/${product.id}`, payload)
+        } else {
+          await api.post('/admin/products', payload)
+        }
+        return true
+      } catch (e: any) {
+        const msg = e.response?.data?.message || 'Failed to save product. Please try again.'
+        return showError(msg)
+      }
+    },
+    allowOutsideClick: () => !Swal.isLoading(),
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      await fetchProducts()
+      Toast.fire({
+        icon: 'success',
+        title: `Product ${product ? 'updated' : 'created'} successfully`,
+      })
     }
-    showModal.value = false
-    await fetchProducts()
-  } catch (e: any) {
-    formError.value = e.response?.data?.message || 'Failed to save product.'
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
-const deleteProduct = async (id: number) => {
-  if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) return
-  
+// Delete confirmation
+const confirmDelete = (product: Product) => {
+  Swal.fire({
+    title: 'Delete Product?',
+    html: `<p>Are you sure you want to delete <strong>"${product.name}"</strong>?</p>
+           <p class="text-sm text-gray-500 mt-2">This action cannot be undone.</p>`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#dc2626',
+    cancelButtonColor: '#64748b',
+    confirmButtonText: 'Yes, delete it',
+    cancelButtonText: 'Cancel',
+    reverseButtons: true,
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      await deleteProduct(product.id, product.name)
+    }
+  })
+}
+
+const deleteProduct = async (id: number, name?: string) => {
   try {
     await api.delete(`/admin/products/${id}`)
     await fetchProducts()
+    Toast.fire({
+      icon: 'success',
+      title: name ? `"${name}" deleted` : 'Product deleted',
+    })
   } catch (error) {
-    console.error('Failed to delete product:', error)
-    alert('Failed to delete product. Please try again.')
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Failed to delete product. Please try again.',
+    })
   }
 }
 

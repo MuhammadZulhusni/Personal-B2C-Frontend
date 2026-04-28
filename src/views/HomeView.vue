@@ -32,6 +32,9 @@
               <div class="hero-actions">
                 <button @click="scrollToProducts" class="btn-primary">
                   <span>Shop Now</span>
+                  <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
                 </button>
                 <button class="btn-ghost">Explore Deals</button>
               </div>
@@ -96,7 +99,7 @@
             <h2 class="section-title">Shop by Category</h2>
           </div>
           <button class="link-btn">
-            View All 
+            View All <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
           </button>
         </div>
 
@@ -115,6 +118,7 @@
               <p class="cat-name">{{ cat.name }}</p>
               <p class="cat-count">{{ cat.count > 0 ? `${cat.count} items` : '—' }}</p>
             </div>
+            <div class="cat-arrow">→</div>
           </div>
         </div>
       </div>
@@ -128,7 +132,7 @@
         <div class="flash-text">
           <span class="flash-badge">⚡ Flash Sale</span>
           <h3 class="flash-title">Up to <strong>50% Off</strong> Selected Items</h3>
-          <p class="flash-sub">Limited stock grab yours before it's gone</p>
+          <p class="flash-sub">Limited stock — grab yours before it's gone</p>
         </div>
         <div class="flash-countdown">
           <div v-for="(unit, key) in timeLeft" :key="key" class="countdown-block">
@@ -136,10 +140,119 @@
             <span class="countdown-label">{{ key }}</span>
           </div>
         </div>
-        <button class="btn-flash">Shop the Sale</button>
+        <button class="btn-flash">Shop the Sale →</button>
       </div>
       <div class="flash-deco flash-deco-1"></div>
       <div class="flash-deco flash-deco-2"></div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         AI STYLIST SECTION
+    ══════════════════════════════════════════════════ -->
+    <section class="section ai-section">
+      <div class="section-inner">
+        <div class="ai-header">
+          <div>
+            <p class="section-eyebrow">✨ Powered by AI</p>
+            <h2 class="section-title">Shop the Vibe</h2>
+            <p class="ai-subtitle">Tell us your mood or occasion — our AI stylist will handpick products just for you.</p>
+          </div>
+        </div>
+
+        <!-- Vibe picker -->
+        <div class="vibe-grid">
+          <button
+            v-for="vibe in vibeOptions"
+            :key="vibe.label"
+            class="vibe-btn"
+            :class="{ active: selectedVibe === vibe.label }"
+            @click="selectVibe(vibe.label)"
+          >
+            <span class="vibe-emoji">{{ vibe.emoji }}</span>
+            <span class="vibe-label">{{ vibe.label }}</span>
+          </button>
+        </div>
+
+        <!-- Custom vibe input -->
+        <div class="vibe-custom">
+          <input
+            v-model="customVibe"
+            type="text"
+            placeholder="Or describe your own vibe... e.g. 'birthday gift for my dad'"
+            class="vibe-input"
+            maxlength="100"
+            @keydown.enter="runAiSuggest"
+          />
+          <button
+            class="btn-ai"
+            :disabled="aiLoading || (!selectedVibe && !customVibe.trim())"
+            @click="runAiSuggest"
+          >
+            <svg v-if="!aiLoading" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.347.347a3.003 3.003 0 01-.927 1.623A3 3 0 0112 20.657a3 3 0 01-2.13-.882 3.003 3.003 0 01-.927-1.623l-.347-.347z"/>
+            </svg>
+            <div v-else class="ai-spinner"></div>
+            <span>{{ aiLoading ? 'Styling...' : 'Get AI Picks' }}</span>
+          </button>
+        </div>
+
+        <!-- Loading skeleton -->
+        <div v-if="aiLoading" class="ai-results">
+          <div v-for="n in 3" :key="n" class="ai-card skeleton">
+            <div class="sk-img"></div>
+            <div class="sk-body">
+              <div class="sk-line short"></div>
+              <div class="sk-line"></div>
+              <div class="sk-line medium"></div>
+              <div class="sk-line short"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Error -->
+        <div v-else-if="aiError" class="ai-error">
+          <span>😕</span>
+          <p>{{ aiError }}</p>
+          <button class="btn-primary small" @click="runAiSuggest">Try Again</button>
+        </div>
+
+        <!-- AI Results -->
+        <div v-else-if="aiResults.length" class="ai-results">
+          <p class="ai-result-label">
+            🎯 AI picks for <strong>"{{ aiCurrentVibe }}"</strong>
+          </p>
+          <div class="ai-cards">
+            <div
+              v-for="(item, i) in aiResults"
+              :key="item.id"
+              class="ai-card"
+              :style="{ animationDelay: `${i * 100}ms` }"
+            >
+              <div class="ai-card-img-wrap" @click="router.push(`/products/${item.id}`)">
+                <img :src="item.image" :alt="item.name" class="ai-card-img" @error="onAiImgError" />
+                <span class="ai-rank">#{{ i + 1 }}</span>
+              </div>
+              <div class="ai-card-body">
+                <span class="ai-card-cat">{{ item.category }}</span>
+                <h4 class="ai-card-name" @click="router.push(`/products/${item.id}`)">{{ item.name }}</h4>
+                <div class="ai-reason">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.347.347a3.003 3.003 0 01-.927 1.623A3 3 0 0112 20.657a3 3 0 01-2.13-.882 3.003 3.003 0 01-.927-1.623l-.347-.347z"/>
+                  </svg>
+                  <p>{{ item.reason }}</p>
+                </div>
+                <div class="ai-card-footer">
+                  <span class="ai-card-price">RM {{ formatPrice(item.price) }}</span>
+                  <button class="btn-ai-cart" @click="addToCartAi(item)">
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </section>
 
     <!-- ══════════════════════════════════════════════════
@@ -286,7 +399,7 @@
       <div class="newsletter-inner">
         <div class="newsletter-badge">✉ Newsletter</div>
         <h3 class="newsletter-title">Stay in the Loop</h3>
-        <p class="newsletter-sub">Exclusive offers, new arrivals, and member-only deals straight to your inbox.</p>
+        <p class="newsletter-sub">Exclusive offers, new arrivals, and member-only deals — straight to your inbox.</p>
         <div class="newsletter-form">
           <input type="email" placeholder="your@email.com" class="newsletter-input" />
           <button class="btn-primary">Subscribe</button>
@@ -301,12 +414,14 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, onUnmounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import api from '@/api'
 import ProductCard from '@/components/ProductCard.vue'
 import { useCartStore } from '@/stores/cart'
 import Swal from 'sweetalert2'
 import 'sweetalert2/dist/sweetalert2.min.css'
 
+const router    = useRouter()
 const cartStore = useCartStore()
 const products = ref<any[]>([])
 const loading = ref(true)
@@ -411,6 +526,35 @@ const clearFilters = () => {
   fetchProducts(1)
 }
 
+// ── AI Stylist ──────────────────────────────────
+const vibeOptions = [
+  { emoji: '🎉', label: 'Birthday Party' },
+  { emoji: '💼', label: 'Work From Home' },
+  { emoji: '🏋️', label: 'Fitness Goals' },
+  { emoji: '🌴', label: 'Beach Vacation' },
+  { emoji: '🎮', label: 'Gaming Night' },
+  { emoji: '💝', label: 'Gift for Partner' },
+  { emoji: '📚', label: 'Study Mode' },
+  { emoji: '🍳', label: 'Home Cooking' },
+]
+
+const selectedVibe  = ref('')
+const customVibe    = ref('')
+const aiLoading     = ref(false)
+const aiError       = ref('')
+const aiResults     = ref<any[]>([])
+const aiCurrentVibe = ref('')
+
+const selectVibe = (label: string) => {
+  selectedVibe.value = selectedVibe.value === label ? '' : label
+  customVibe.value   = ''
+}
+
+const onAiImgError = (e: Event) => {
+  (e.target as HTMLImageElement).src = 'https://placehold.co/400x300/f1f5f9/94a3b8?text=No+Image'
+}
+
+// ── Toast (defined early so all functions can use it) ──
 const Toast = Swal.mixin({
   toast: true,
   position: 'top-end',
@@ -422,6 +566,30 @@ const Toast = Swal.mixin({
     toast.addEventListener('mouseleave', Swal.resumeTimer)
   }
 })
+
+const runAiSuggest = async () => {
+  const vibe = customVibe.value.trim() || selectedVibe.value
+  if (!vibe || aiLoading.value) return
+
+  aiLoading.value     = true
+  aiError.value       = ''
+  aiResults.value     = []
+  aiCurrentVibe.value = vibe
+
+  try {
+    const { data } = await api.post('/ai/suggest', { vibe })
+    aiResults.value = data.results || []
+  } catch (e: any) {
+    aiError.value = e.response?.data?.error || 'Something went wrong. Please try again.'
+  } finally {
+    aiLoading.value = false
+  }
+}
+
+const addToCartAi = (product: any) => {
+  cartStore.addToCart(product)
+  Toast.fire({ icon: 'success', title: 'Added to cart!', text: product.name })
+}
 
 const addToCart = (product: any) => {
   cartStore.addToCart(product)
@@ -1161,7 +1329,17 @@ onUnmounted(() => {
 .list-card-body { flex: 1; display: flex; flex-direction: column; gap: 0.4rem; }
 .list-card-cat { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gold); font-weight: 600; }
 .list-card-name { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--text-primary); }
-.list-card-desc { font-size: 0.83rem; color: var(--text-muted); line-height: 1.5; flex: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.list-card-desc {
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
+  overflow: hidden;
+}
 .list-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 0.5rem; }
 .list-card-price { font-family: 'Playfair Display', serif; font-size: 1.25rem; font-weight: 700; color: var(--text-primary); }
 
@@ -1342,5 +1520,299 @@ onUnmounted(() => {
   .newsletter-form { flex-direction: column; }
   .products-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
   .hero-title { font-size: 2.4rem; }
+}
+/* ── AI Stylist ────────────────────────────────── */
+.ai-section { background: var(--surface-2); }
+
+.ai-header { margin-bottom: 2rem; }
+.ai-subtitle { color: var(--text-muted); font-size: 0.95rem; margin-top: 0.4rem; max-width: 500px; }
+
+/* Vibe pill grid */
+.vibe-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.vibe-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: 100px;
+  border: 1.5px solid var(--border);
+  background: white;
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 4px rgba(15,23,42,0.05);
+}
+.vibe-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(184,134,11,0.15);
+}
+.vibe-btn.active {
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 4px 16px rgba(184,134,11,0.3);
+  transform: translateY(-1px);
+}
+.vibe-emoji { font-size: 1rem; }
+.vibe-label { white-space: nowrap; }
+
+/* Custom input row */
+.vibe-custom {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.vibe-input {
+  flex: 1;
+  padding: 12px 18px;
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+}
+.vibe-input::placeholder { color: var(--text-muted); }
+.vibe-input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(184,134,11,0.1);
+}
+
+.btn-ai {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 0.88rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(15,23,42,0.2);
+}
+.btn-ai svg { width: 17px; height: 17px; flex-shrink: 0; }
+.btn-ai:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  box-shadow: 0 6px 20px rgba(184,134,11,0.35);
+  transform: translateY(-1px);
+}
+.btn-ai:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.ai-spinner {
+  width: 17px; height: 17px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* Result label */
+.ai-result-label {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+}
+.ai-result-label strong { color: var(--gold); }
+
+/* AI Cards */
+.ai-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.ai-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(15,23,42,0.06);
+  animation: fadeInUp 0.5s ease both;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.2s;
+}
+.ai-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(15,23,42,0.1);
+  border-color: var(--gold);
+}
+
+.ai-card-img-wrap {
+  position: relative;
+  height: 180px;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--surface-2);
+}
+.ai-card-img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.ai-card:hover .ai-card-img { transform: scale(1.05); }
+
+.ai-rank {
+  position: absolute;
+  top: 10px; left: 10px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(184,134,11,0.4);
+}
+
+.ai-card-body {
+  padding: 1.1rem 1.25rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ai-card-cat {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.ai-card-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: color 0.2s;
+  line-height: 1.3;
+}
+.ai-card-name:hover { color: var(--gold); }
+
+/* AI reason chip */
+.ai-reason {
+  display: flex;
+  gap: 7px;
+  align-items: flex-start;
+  background: #fef9ec;
+  border: 1px solid rgba(184,134,11,0.15);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 0.25rem 0;
+}
+.ai-reason svg {
+  width: 14px; height: 14px;
+  color: var(--gold);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.ai-reason p {
+  font-size: 0.78rem;
+  color: #78580a;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.ai-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--surface-2);
+}
+
+.ai-card-price {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.btn-ai-cart {
+  padding: 8px 16px;
+  background: #0f172a;
+  color: white;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-ai-cart:hover {
+  background: var(--gold);
+  box-shadow: 0 4px 12px rgba(184,134,11,0.3);
+  transform: translateY(-1px);
+}
+
+/* Skeleton loading */
+.ai-results { }
+.ai-card.skeleton {
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+.sk-img {
+  height: 180px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+.sk-body { padding: 1.1rem 1.25rem; display: flex; flex-direction: column; gap: 10px; }
+.sk-line {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+.sk-line.short { width: 40%; }
+.sk-line.medium { width: 70%; }
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* AI Error */
+.ai-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.ai-error span { font-size: 2.5rem; }
+
+/* Responsive */
+@media (max-width: 640px) {
+  .vibe-custom { flex-direction: column; }
+  .ai-cards { grid-template-columns: 1fr; }
 }
 </style>

@@ -86,6 +86,21 @@ const routes = [
         name: 'admin-orders',
         component: () => import('@/views/admin/AdminOrdersView.vue') 
       },
+      { 
+        path: 'analytics',     
+        name: 'admin-analytics',
+        component: () => import('@/views/admin/AdminAnalyticsView.vue') 
+      },
+      { 
+        path: 'finance',     
+        name: 'admin-finance',
+        component: () => import('@/views/admin/AdminFinanceView.vue') 
+      },
+      { 
+        path: 'profile',     
+        name: 'admin-profile',
+        component: () => import('@/views/admin/AdminProfileView.vue') 
+      },
     ]
   },
 
@@ -109,29 +124,30 @@ const router = createRouter({
   }
 })
 
-// Navigation Guard - Modern syntax (return value instead of next())
-router.beforeEach((to, from) => {
+// Navigation Guard
+router.beforeEach(async (to, from) => {
   const authStore = useAuthStore()
+  
+  // Wait for auth to initialize if not yet done
+  if (!authStore.isInitialized) {
+    await authStore.initialize()
+  }
   
   // Check if route requires authentication
   if (to.meta.requiresAuth && !authStore.isLoggedIn) {
-    // Return the redirect path instead of calling next()
     return { name: 'login', query: { redirect: to.fullPath } }
   }
   
   // Check if route requires admin role
   if (to.meta.requiresAdmin && authStore.user?.role !== 'admin') {
-    // Return the redirect path instead of calling next()
     return { name: 'home' }
   }
   
   // Redirect logged-in users away from guest routes
   if (to.meta.guest && authStore.isLoggedIn) {
-    // Return the redirect path instead of calling next()
     return { name: 'home' }
   }
   
-  // Allow navigation
   return true
 })
 

@@ -234,9 +234,10 @@ const fetchProducts = async () => {
   loading.value = true
   try {
     const { data } = await api.get('/admin/products')
-    products.value = data.data
+    products.value = data.data || data || []
   } catch (error) {
     Toast.fire({ icon: 'error', title: 'Failed to load products' })
+    products.value = []
   } finally {
     loading.value = false
   }
@@ -338,7 +339,6 @@ const openModal = (product: Product | null = null) => {
     reverseButtons: true,
     focusConfirm: false,
     didOpen: () => {
-      // Live image preview
       const imageInput = document.getElementById('swal-image') as HTMLInputElement
       const imgPreview = document.getElementById('img-preview') as HTMLImageElement
 
@@ -356,7 +356,6 @@ const openModal = (product: Product | null = null) => {
       }
 
       imageInput.addEventListener('input', updatePreview)
-      // Show preview immediately if editing with existing image
       if (product?.image) updatePreview()
     },
     preConfirm: async () => {

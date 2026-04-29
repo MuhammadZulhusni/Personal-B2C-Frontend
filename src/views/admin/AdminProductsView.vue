@@ -3,11 +3,11 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Products Catalog</h2>
-        <p class="text-sm text-gray-500 mt-1">{{ products.length }} products in inventory</p>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-800">Products Catalog</h2>
+        <p class="text-sm text-slate-500 mt-1">{{ filteredProducts.length }} of {{ products.length }} products showing</p>
       </div>
       <button 
-        class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2 justify-center shadow-sm"
+        class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-medium transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 justify-center"
         @click="openModal()"
       >
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -17,67 +17,114 @@
       </button>
     </div>
 
-    <!-- Search/Filter -->
-    <div class="flex flex-col sm:flex-row gap-3">
-      <div class="flex-1 relative">
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-        <input 
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search products by name or description..."
-          class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
+    <!-- Filter Bar -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+      <div class="flex flex-col sm:flex-row gap-3">
+        <!-- Search -->
+        <div class="flex-1 relative">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input 
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search products..."
+            class="w-full px-4 py-2.5 pl-10 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+          />
+        </div>
+        
+        <!-- Category Filter -->
+        <select 
+          v-model="categoryFilter"
+          class="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-auto text-sm bg-white"
+        >
+          <option value="">📂 All Categories</option>
+          <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+        </select>
+        
+        <!-- Stock Filter -->
+        <select 
+          v-model="stockFilter"
+          class="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-auto text-sm bg-white"
+        >
+          <option value="">📦 All Stock</option>
+          <option value="in_stock">✅ In Stock</option>
+          <option value="low_stock">⚠️ Low Stock</option>
+          <option value="out_of_stock">❌ Out of Stock</option>
+        </select>
       </div>
-      <select 
-        v-model="categoryFilter"
-        class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-auto"
-      >
-        <option value="">All Categories</option>
-        <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
-      </select>
-      <select 
-        v-model="stockFilter"
-        class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-auto"
-      >
-        <option value="">All Stock Status</option>
-        <option value="in_stock">In Stock (>10)</option>
-        <option value="low_stock">Low Stock (1-10)</option>
-        <option value="out_of_stock">Out of Stock</option>
-      </select>
+
+      <!-- Active Filters Badges -->
+      <div v-if="hasActiveFilters" class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+        <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Active Filters:</span>
+        
+        <span v-if="searchQuery" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200">
+          🔍 "{{ searchQuery }}"
+          <button @click="searchQuery = ''" class="hover:text-blue-900 ml-1">×</button>
+        </span>
+        
+        <span v-if="categoryFilter" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 text-xs font-medium rounded-full border border-purple-200">
+          📂 {{ categoryFilter }}
+          <button @click="categoryFilter = ''" class="hover:text-purple-900 ml-1">×</button>
+        </span>
+        
+        <span v-if="stockFilter" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border"
+          :class="{
+            'bg-green-50 text-green-700 border-green-200': stockFilter === 'in_stock',
+            'bg-yellow-50 text-yellow-700 border-yellow-200': stockFilter === 'low_stock',
+            'bg-red-50 text-red-700 border-red-200': stockFilter === 'out_of_stock',
+          }"
+        >
+          {{ stockFilter === 'in_stock' ? '✅ In Stock' : stockFilter === 'low_stock' ? '⚠️ Low Stock' : '❌ Out of Stock' }}
+          <button @click="stockFilter = ''" class="hover:opacity-75 ml-1">×</button>
+        </span>
+        
+        <button @click="clearAllFilters" class="text-xs text-gray-500 hover:text-red-600 font-medium ml-2 transition-colors">
+          Clear All
+        </button>
+      </div>
+    </div>
+
+    <!-- Mode Indicator -->
+    <div v-if="!loading && products.length > 0" class="text-xs text-gray-400 flex items-center gap-2">
+      <span>Viewing</span>
+      <span class="font-semibold text-gray-600">{{ filteredProducts.length }}</span>
+      <span>products</span>
+      <span v-if="hasActiveFilters" class="text-blue-500 font-medium">(filtered)</span>
+      <span v-else class="text-gray-400">(all)</span>
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="bg-white rounded-xl shadow-sm p-12 text-center">
-      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-3"></div>
-      <p class="text-gray-500">Loading products...</p>
+    <div v-if="loading" class="bg-white rounded-2xl shadow-sm p-12 text-center">
+      <div class="inline-block animate-spin rounded-full h-10 w-10 border-[3px] border-blue-200 border-t-blue-600 mb-4"></div>
+      <p class="text-gray-500 font-medium">Loading products...</p>
     </div>
 
     <!-- Products Grid -->
-    <div v-else-if="filteredProducts.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div v-else-if="filteredProducts.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
       <div 
         v-for="product in filteredProducts" 
         :key="product.id"
-        class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow"
+        class="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
       >
-        <div class="relative h-48 bg-gray-100">
+        <div class="relative h-52 bg-gray-100 overflow-hidden">
           <img 
             :src="product.image" 
             :alt="product.name" 
-            class="w-full h-full object-cover"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             @error="handleImageError"
           />
-          <div class="absolute top-3 right-3 flex gap-1">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div class="absolute top-3 right-3 flex gap-1.5 flex-wrap justify-end">
             <span 
               v-if="product.category"
-              class="px-2 py-1 rounded-full text-xs font-medium shadow-sm bg-purple-100 text-purple-700"
+              class="px-2.5 py-1 rounded-full text-[10px] font-semibold shadow-sm bg-white/90 backdrop-blur-sm text-gray-700 uppercase tracking-wider"
             >
               {{ product.category }}
             </span>
             <span 
               :class="[
-                'px-2 py-1 rounded-full text-xs font-medium shadow-sm',
+                'px-2.5 py-1 rounded-full text-[10px] font-semibold shadow-sm',
                 getStockClass(product.stock)
               ]"
             >
@@ -87,40 +134,37 @@
         </div>
         
         <div class="p-5">
-          <h3 class="font-semibold text-gray-800 text-lg mb-1">{{ product.name }}</h3>
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <h3 class="font-semibold text-gray-800 text-base leading-tight">{{ product.name }}</h3>
+          </div>
           
-          <span 
-            v-if="product.category"
-            class="inline-block px-2 py-0.5 bg-purple-50 text-purple-700 text-xs rounded-full mb-2"
-          >
-            {{ product.category }}
-          </span>
+          <p class="text-sm text-gray-500 mb-4 line-clamp-2 leading-relaxed">{{ product.description }}</p>
           
-          <p class="text-sm text-gray-500 mb-3 line-clamp-2">{{ product.description }}</p>
-          
-          <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center justify-between mb-4 p-3 bg-gray-50 rounded-xl">
             <div>
-              <p class="text-xs text-gray-500">Price</p>
-              <p class="text-xl font-bold text-gray-800">RM {{ formatPrice(product.price) }}</p>
+              <p class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Price</p>
+              <p class="text-lg font-bold text-gray-800">RM {{ formatPrice(product.price) }}</p>
             </div>
             <div class="text-right">
-              <p class="text-xs text-gray-500">Stock</p>
-              <p class="text-lg font-semibold text-gray-700">{{ product.stock }} units</p>
+              <p class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Stock</p>
+              <p class="text-lg font-semibold" :class="product.stock > 10 ? 'text-green-600' : product.stock > 0 ? 'text-amber-600' : 'text-red-600'">
+                {{ product.stock }}
+              </p>
             </div>
           </div>
 
           <div class="flex gap-2">
             <button 
-              class="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
+              class="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors"
               @click="openModal(product)"
             >
-              Edit
+              ✏️ Edit
             </button>
             <button 
-              class="flex-1 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium rounded-lg transition-colors"
+              class="flex-1 px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium rounded-xl transition-colors"
               @click="confirmDelete(product)"
             >
-              Delete
+              🗑 Delete
             </button>
           </div>
         </div>
@@ -128,17 +172,29 @@
     </div>
 
     <!-- Empty State -->
-    <div v-else class="bg-white rounded-xl shadow-sm p-12 text-center">
-      <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-      </svg>
-      <p class="text-lg text-gray-600 mb-2">No products found</p>
-      <p class="text-sm text-gray-400 mb-4">Get started by adding your first product</p>
+    <div v-else class="bg-white rounded-2xl shadow-sm p-16 text-center">
+      <div class="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+        <svg class="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-bold text-gray-800 mb-2">No products found</h3>
+      <p class="text-sm text-gray-500 mb-6 max-w-sm mx-auto">
+        {{ hasActiveFilters ? 'Try adjusting your filters to see more products.' : 'Get started by adding your first product to the catalog.' }}
+      </p>
       <button 
-        class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+        v-if="!hasActiveFilters"
+        class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-medium transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
         @click="openModal()"
       >
-        Add Product
+        Add Your First Product
+      </button>
+      <button 
+        v-else
+        class="px-6 py-3 bg-white border-2 border-gray-200 hover:border-gray-300 text-gray-700 rounded-xl font-medium transition-all"
+        @click="clearAllFilters"
+      >
+        Clear All Filters
       </button>
     </div>
   </div>
@@ -177,7 +233,10 @@ const searchQuery = ref('')
 const categoryFilter = ref('')
 const stockFilter = ref('')
 
-// SweetAlert2 Toast
+const hasActiveFilters = computed(() => {
+  return searchQuery.value !== '' || categoryFilter.value !== '' || stockFilter.value !== ''
+})
+
 const Toast = Swal.mixin({
   toast: true,
   position: 'top-end',
@@ -225,6 +284,12 @@ const getStockLabel = (stock: number): string => {
   return 'In Stock'
 }
 
+const clearAllFilters = () => {
+  searchQuery.value = ''
+  categoryFilter.value = ''
+  stockFilter.value = ''
+}
+
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement
   img.src = 'https://via.placeholder.com/400x300?text=No+Image'
@@ -243,184 +308,137 @@ const fetchProducts = async () => {
   }
 }
 
-// Build the HTML string for the SweetAlert2 product form
-const buildFormHtml = (product: Product | null) => {
-  const categoryOptions = categories.value
-    .map(cat => `<option value="${cat}" ${product?.category === cat ? 'selected' : ''}>${cat}</option>`)
-    .join('')
+// Fancy SweetAlert2 Modal
+const openModal = (product: Product | null = null) => {
+  const isEdit = product !== null
 
-  return `
-    <style>
-      .swal-product-form { text-align: left; }
-      .swal-product-form label { display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; }
-      .swal-product-form .required { color: #ef4444; }
-      .swal-product-form input,
-      .swal-product-form select,
-      .swal-product-form textarea {
-        width: 100%;
-        padding: 0.5rem 1rem;
-        border: 1px solid #d1d5db;
-        border-radius: 0.5rem;
-        font-size: 0.875rem;
-        outline: none;
-        transition: border-color 0.2s, box-shadow 0.2s;
-        box-sizing: border-box;
-        margin-bottom: 1rem;
-        color: #1f2937;
-      }
-      .swal-product-form input:focus,
-      .swal-product-form select:focus,
-      .swal-product-form textarea:focus {
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
-      }
-      .swal-product-form .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-      .swal-product-form .grid-2 input { margin-bottom: 0; }
-      .swal-product-form textarea { resize: none; }
-      .swal-product-form .form-error {
-        background: #fef2f2;
-        color: #dc2626;
-        padding: 0.5rem 0.75rem;
-        border-radius: 0.5rem;
-        font-size: 0.8rem;
-        margin-bottom: 1rem;
-        display: none;
-      }
-      .swal-product-form #img-preview {
-        width: 72px; height: 72px; object-fit: cover;
-        border-radius: 0.5rem; border: 1px solid #e5e7eb;
-        margin-top: 0.4rem; display: none;
-      }
-    </style>
-    <div class="swal-product-form">
-      <div id="swal-form-error" class="form-error"></div>
-
-      <label>Product Name <span class="required">*</span></label>
-      <input id="swal-name" type="text" placeholder="e.g., Wireless Headphones" value="${product?.name ?? ''}" />
-
-      <label>Category <span class="required">*</span></label>
-      <select id="swal-category">
-        <option value="">Select category...</option>
-        ${categoryOptions}
-      </select>
-
-      <label>Description</label>
-      <textarea id="swal-description" rows="3" placeholder="Product description...">${product?.description ?? ''}</textarea>
-
-      <div class="grid-2">
+  Swal.fire({
+    title: isEdit ? '✏️ Edit Product' : '✨ Add New Product',
+    html: `
+      <div style="text-align: left; display: flex; flex-direction: column; gap: 1rem;">
         <div>
-          <label>Price (RM) <span class="required">*</span></label>
-          <input id="swal-price" type="number" step="0.01" min="0" placeholder="0.00" value="${product?.price ?? ''}" />
+          <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em;">
+            🏷️ Product Name <span style="color: #ef4444;">*</span>
+          </label>
+          <input id="swal-name" class="swal2-input" style="width: 100%; margin: 0;" placeholder="e.g., Wireless Headphones Pro" value="${product?.name ?? ''}">
         </div>
+        
         <div>
-          <label>Stock <span class="required">*</span></label>
-          <input id="swal-stock" type="number" min="0" placeholder="0" value="${product?.stock ?? ''}" />
+          <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em;">
+            📂 Category <span style="color: #ef4444;">*</span>
+          </label>
+          <select id="swal-category" class="swal2-input" style="width: 100%; margin: 0;">
+            <option value="">Select category...</option>
+            ${categories.value.map(cat => `<option value="${cat}" ${product?.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}
+          </select>
+        </div>
+        
+        <div>
+          <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em;">
+            📝 Description
+          </label>
+          <textarea id="swal-description" class="swal2-textarea" style="width: 100%; margin: 0; resize: none;" placeholder="Product description..." rows="3">${product?.description ?? ''}</textarea>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div>
+            <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em;">
+              💰 Price (RM) <span style="color: #ef4444;">*</span>
+            </label>
+            <input id="swal-price" class="swal2-input" style="width: 100%; margin: 0;" type="number" step="0.01" min="0" placeholder="0.00" value="${product?.price ?? ''}">
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em;">
+              📦 Stock <span style="color: #ef4444;">*</span>
+            </label>
+            <input id="swal-stock" class="swal2-input" style="width: 100%; margin: 0;" type="number" min="0" placeholder="0" value="${product?.stock ?? ''}">
+          </div>
+        </div>
+        
+        <div>
+          <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em;">
+            🖼️ Image URL
+          </label>
+          <input id="swal-image" class="swal2-input" style="width: 100%; margin: 0;" placeholder="https://example.com/image.jpg" value="${product?.image ?? ''}">
         </div>
       </div>
-
-      <label>Image URL</label>
-      <input id="swal-image" type="text" placeholder="https://example.com/image.jpg" value="${product?.image ?? ''}" />
-      <img id="img-preview" src="" alt="Preview" />
-    </div>
-  `
-}
-
-// Open SweetAlert2 modal for Add / Edit
-const openModal = (product: Product | null = null) => {
-  Swal.fire({
-    title: product ? 'Edit Product' : 'Add New Product',
-    html: buildFormHtml(product),
-    width: 560,
+    `,
     showCancelButton: true,
+    confirmButtonText: isEdit ? '💾 Update Product' : '🚀 Create Product',
+    cancelButtonText: 'Cancel',
     confirmButtonColor: '#2563eb',
     cancelButtonColor: '#64748b',
-    confirmButtonText: product ? 'Update Product' : 'Create Product',
-    cancelButtonText: 'Cancel',
-    reverseButtons: true,
-    focusConfirm: false,
-    didOpen: () => {
-      const imageInput = document.getElementById('swal-image') as HTMLInputElement
-      const imgPreview = document.getElementById('img-preview') as HTMLImageElement
-
-      const updatePreview = () => {
-        const url = imageInput.value.trim()
-        if (url) {
-          imgPreview.style.display = 'block'
-          imgPreview.src = url
-          imgPreview.onerror = () => {
-            imgPreview.src = 'https://via.placeholder.com/80x80?text=Invalid+URL'
-          }
-        } else {
-          imgPreview.style.display = 'none'
-        }
-      }
-
-      imageInput.addEventListener('input', updatePreview)
-      if (product?.image) updatePreview()
+    width: '560px',
+    customClass: {
+      popup: 'rounded-2xl',
+      title: 'text-lg font-bold text-slate-800',
+      confirmButton: 'px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors shadow-lg',
+      cancelButton: 'px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors',
     },
-    preConfirm: async () => {
-      const name     = (document.getElementById('swal-name') as HTMLInputElement).value.trim()
+    preConfirm: () => {
+      const name = (document.getElementById('swal-name') as HTMLInputElement).value.trim()
       const category = (document.getElementById('swal-category') as HTMLSelectElement).value
       const description = (document.getElementById('swal-description') as HTMLTextAreaElement).value.trim()
-      const price    = parseFloat((document.getElementById('swal-price') as HTMLInputElement).value)
-      const stock    = parseInt((document.getElementById('swal-stock') as HTMLInputElement).value)
-      const image    = (document.getElementById('swal-image') as HTMLInputElement).value.trim()
+      const price = parseFloat((document.getElementById('swal-price') as HTMLInputElement).value)
+      const stock = parseInt((document.getElementById('swal-stock') as HTMLInputElement).value)
+      const image = (document.getElementById('swal-image') as HTMLInputElement).value.trim()
 
-      const errorEl = document.getElementById('swal-form-error') as HTMLElement
+      if (!name) { Swal.showValidationMessage('Product name is required'); return false }
+      if (!category) { Swal.showValidationMessage('Please select a category'); return false }
+      if (isNaN(price) || price <= 0) { Swal.showValidationMessage('Enter a valid price'); return false }
+      if (isNaN(stock) || stock < 0) { Swal.showValidationMessage('Stock must be 0 or greater'); return false }
 
-      const showError = (msg: string) => {
-        errorEl.textContent = msg
-        errorEl.style.display = 'block'
-        Swal.resetValidationMessage()
-        return false
-      }
-
-      if (!name) return showError('Product name is required.')
-      if (!category) return showError('Please select a category.')
-      if (isNaN(price) || price <= 0) return showError('Please enter a valid price greater than 0.')
-      if (isNaN(stock) || stock < 0) return showError('Stock must be 0 or greater.')
-
-      errorEl.style.display = 'none'
-
-      const payload = { name, category, description, price, stock, image }
-
-      try {
-        if (product) {
-          await api.put(`/admin/products/${product.id}`, payload)
-        } else {
-          await api.post('/admin/products', payload)
-        }
-        return true
-      } catch (e: any) {
-        const msg = e.response?.data?.message || 'Failed to save product. Please try again.'
-        return showError(msg)
-      }
-    },
-    allowOutsideClick: () => !Swal.isLoading(),
+      return { name, category, description, price, stock, image }
+    }
   }).then(async (result) => {
-    if (result.isConfirmed) {
-      await fetchProducts()
-      Toast.fire({
-        icon: 'success',
-        title: `Product ${product ? 'updated' : 'created'} successfully`,
-      })
+    if (result.isConfirmed && result.value) {
+      await saveProduct(result.value, product?.id)
     }
   })
 }
 
-// Delete confirmation
+const saveProduct = async (formData: any, productId?: number) => {
+  Swal.fire({
+    title: 'Saving...',
+    allowOutsideClick: false,
+    didOpen: () => Swal.showLoading()
+  })
+
+  try {
+    if (productId) {
+      await api.put(`/admin/products/${productId}`, formData)
+    } else {
+      await api.post('/admin/products', formData)
+    }
+    await fetchProducts()
+    Toast.fire({ icon: 'success', title: `Product ${productId ? 'updated' : 'created'} successfully` })
+  } catch (e: any) {
+    Swal.fire({ icon: 'error', title: 'Error', text: e.response?.data?.message || 'Failed to save product' })
+  }
+}
+
 const confirmDelete = (product: Product) => {
   Swal.fire({
     title: 'Delete Product?',
-    html: `<p>Are you sure you want to delete <strong>"${product.name}"</strong>?</p>
-           <p class="text-sm text-gray-500 mt-2">This action cannot be undone.</p>`,
+    html: `
+      <div style="text-align: center;">
+        <p style="color: #475569; margin-bottom: 0.5rem;">Are you sure you want to delete</p>
+        <p style="font-weight: 700; font-size: 1.1rem; color: #0f172a; margin-bottom: 0.5rem;">"${product.name}"</p>
+        <p style="font-size: 0.85rem; color: #94a3b8;">This action cannot be undone.</p>
+      </div>
+    `,
     icon: 'warning',
     showCancelButton: true,
+    confirmButtonText: 'Yes, delete',
+    cancelButtonText: 'Keep it',
     confirmButtonColor: '#dc2626',
     cancelButtonColor: '#64748b',
-    confirmButtonText: 'Yes, delete it',
-    cancelButtonText: 'Cancel',
     reverseButtons: true,
+    customClass: {
+      popup: 'rounded-2xl',
+      confirmButton: 'px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors',
+      cancelButton: 'px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors',
+    },
   }).then(async (result) => {
     if (result.isConfirmed) {
       await deleteProduct(product.id, product.name)
@@ -432,16 +450,9 @@ const deleteProduct = async (id: number, name?: string) => {
   try {
     await api.delete(`/admin/products/${id}`)
     await fetchProducts()
-    Toast.fire({
-      icon: 'success',
-      title: name ? `"${name}" deleted` : 'Product deleted',
-    })
+    Toast.fire({ icon: 'success', title: `"${name}" deleted` })
   } catch (error) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: 'Failed to delete product. Please try again.',
-    })
+    Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to delete product' })
   }
 }
 

@@ -393,21 +393,108 @@
     </section>
 
     <!-- ══════════════════════════════════════════════════
-         NEWSLETTER
+        LOCATION & MAP SECTION
     ══════════════════════════════════════════════════ -->
-    <section class="newsletter-section">
-      <div class="newsletter-inner">
-        <div class="newsletter-badge">✉ Newsletter</div>
-        <h3 class="newsletter-title">Stay in the Loop</h3>
-        <p class="newsletter-sub">Exclusive offers, new arrivals, and member-only deals — straight to your inbox.</p>
-        <div class="newsletter-form">
-          <input type="email" placeholder="your@email.com" class="newsletter-input" />
-          <button class="btn-primary">Subscribe</button>
+    <!-- ══════════════════════════════════════════════════
+     LOCATION & MAP SECTION
+══════════════════════════════════════════════════ -->
+<section class="location-section">
+  <div class="location-inner">
+    <div class="location-content">
+      <div class="location-badge">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        Our Location
+      </div>
+      <h3 class="location-title">Visit Our Store</h3>
+      <p class="location-sub">Come visit us at our physical store. We're conveniently located and ready to serve you.</p>
+      
+      <div class="location-info-grid">
+        <div class="location-info-card">
+          <div class="location-info-icon">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <div>
+            <p class="location-info-label">Address</p>
+            <p class="location-info-value">PARC 3, Residensi Pudu Alam Rekreasi,<br />5, Jalan Pudu Perdana, Taman Pertama,<br />56100 Kuala Lumpur, Malaysia</p>
+          </div>
+        </div>
+        
+        <div class="location-info-card">
+          <div class="location-info-icon">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <p class="location-info-label">Operating Hours</p>
+            <p class="location-info-value">Mon - Sat: 10:00 AM - 8:00 PM<br />Sun: 10:00 AM - 6:00 PM</p>
+          </div>
+        </div>
+        
+        <div class="location-info-card">
+          <div class="location-info-icon">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+            </svg>
+          </div>
+          <div>
+            <p class="location-info-label">Contact</p>
+            <p class="location-info-value">+60 12-345 6789<br />hello@minishop.com</p>
+          </div>
         </div>
       </div>
-      <div class="nl-orb nl-orb-1"></div>
-      <div class="nl-orb nl-orb-2"></div>
-    </section>
+
+      <a 
+        href="https://maps.app.goo.gl/tckRpQsLgKrsykQB9" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        class="location-cta"
+      >
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+        Get Directions on Google Maps
+      </a>
+    </div>
+
+    <!-- Map Container -->
+    <div class="location-map-wrap">
+      <div class="location-map">
+        <iframe 
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4061.7081054201035!2d101.7281918750462!3d3.121776953320148!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31cc366d5edd2813%3A0xaad62a668c76756f!2sParc%203!5e1!3m2!1sen!2smy!4v1777475719857!5m2!1sen!2smy"
+          width="100%" 
+          height="100%" 
+          style="border:0;" 
+          allowfullscreen="" 
+          loading="lazy" 
+          referrerpolicy="no-referrer-when-downgrade"
+          class="location-map-iframe"
+        ></iframe>
+      </div>
+      <div class="location-map-overlay">
+        <a 
+          href="https://maps.app.goo.gl/tckRpQsLgKrsykQB9" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          class="location-map-btn"
+        >
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+          Open in Google Maps
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="location-orb location-orb-1"></div>
+  <div class="location-orb location-orb-2"></div>
+</section>
 
   </div>
 </template>
@@ -1410,28 +1497,44 @@ onUnmounted(() => {
 .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 .page-btn.nav { font-size: 1rem; }
 
-/* ── Newsletter ────────────────────────────────── */
-.newsletter-section {
+/* ── Location & Map ──────────────────────────────── */
+.location-section {
   position: relative;
   overflow: hidden;
   background: var(--surface-2);
   border-top: 1px solid var(--border);
   padding: 80px 0;
-  text-align: center;
-}
-.newsletter-inner {
-  position: relative;
-  z-index: 2;
-  max-width: 560px;
-  margin: 0 auto;
-  padding: 0 2rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
 }
 
-.newsletter-badge {
+.location-inner {
+  position: relative;
+  z-index: 2;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .location-inner {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+.location-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.location-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 6px 14px;
   background: rgba(201,168,76,0.1);
   border: 1px solid rgba(201,168,76,0.25);
@@ -1441,54 +1544,172 @@ onUnmounted(() => {
   letter-spacing: 0.1em;
   color: var(--gold);
   text-transform: uppercase;
+  width: fit-content;
 }
 
-.newsletter-title {
+.location-title {
   font-family: 'Playfair Display', serif;
   font-size: clamp(1.8rem, 3vw, 2.5rem);
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.15;
 }
-.newsletter-sub { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; }
 
-.newsletter-form {
+.location-sub {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.location-info-grid {
   display: flex;
-  gap: 0.75rem;
-  width: 100%;
+  flex-direction: column;
+  gap: 1rem;
   margin-top: 0.5rem;
 }
-.newsletter-input {
-  flex: 1;
-  padding: 13px 18px;
+
+.location-info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
   background: white;
   border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.location-info-card:hover {
+  border-color: var(--gold);
+  box-shadow: 0 4px 12px rgba(184,134,11,0.1);
+}
+
+.location-info-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--gold-pale);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--gold);
+}
+
+.location-info-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.location-info-value {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.location-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+  color: #0f0f17;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
   border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 20px rgba(201,168,76,0.3);
+  width: fit-content;
+  margin-top: 0.5rem;
+}
+
+.location-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(201,168,76,0.45);
+}
+
+/* Map Container */
+.location-map-wrap {
+  position: relative;
+  height: 100%;
+  min-height: 400px;
+}
+
+.location-map {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 24px rgba(15,23,42,0.08);
+}
+
+.location-map-iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+}
+
+.location-map-overlay {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+}
+
+.location-map-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: white;
   color: var(--text-primary);
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.9rem;
-  outline: none;
-  transition: border-color 0.2s;
-  box-shadow: 0 1px 3px rgba(15,23,42,0.06);
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 8px;
+  text-decoration: none;
+  box-shadow: 0 2px 12px rgba(15,23,42,0.15);
+  transition: all 0.2s;
+  border: 1px solid var(--border);
 }
-.newsletter-input::placeholder { color: var(--text-muted); }
-.newsletter-input:focus { border-color: var(--gold); }
 
-.nl-orb {
+.location-map-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(15,23,42,0.2);
+  border-color: var(--gold);
+}
+
+/* Location Orbs */
+.location-orb {
   position: absolute;
   border-radius: 50%;
   filter: blur(80px);
   pointer-events: none;
+  z-index: 0;
 }
-.nl-orb-1 {
-  width: 350px; height: 350px;
+
+.location-orb-1 {
+  width: 350px;
+  height: 350px;
   background: rgba(184,134,11,0.05);
-  top: -100px; left: -100px;
+  top: -100px;
+  left: -100px;
 }
-.nl-orb-2 {
-  width: 350px; height: 350px;
+
+.location-orb-2 {
+  width: 350px;
+  height: 350px;
   background: rgba(59,130,246,0.04);
-  bottom: -100px; right: -50px;
+  bottom: -100px;
+  right: -50px;
 }
 
 /* ── Transitions & Animations ──────────────────── */

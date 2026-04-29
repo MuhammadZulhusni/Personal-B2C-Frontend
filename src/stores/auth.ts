@@ -36,10 +36,15 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function login(credentials: { email: string; password: string }) {
-    const { data } = await api.post('/login', credentials)
-    token.value = data.token
-    user.value = data.user as User
-    localStorage.setItem('token', data.token)
+    try {
+      const { data } = await api.post('/login', credentials)
+      token.value = data.token
+      user.value = data.user as User
+      localStorage.setItem('token', data.token)
+    } catch (error) {
+      // Re-throw so the LoginView can catch it
+      throw error
+    }
   }
 
   async function register(formData: any) {

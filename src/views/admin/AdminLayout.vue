@@ -177,7 +177,7 @@
           </RouterLink>
           
           <button 
-            @click="handleLogout"
+            @click="confirmLogout"
             class="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 hover:bg-red-500/20 hover:text-red-400 transition-all duration-200 text-sm group"
           >
             <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -213,6 +213,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import Swal from 'sweetalert2'
 
 const route = useRoute()
 const router = useRouter()
@@ -233,10 +234,71 @@ const closeSidebarOnMobile = () => {
   }
 }
 
-const handleLogout = async () => {
+// Logout with SweetAlert2 confirmation
+const confirmLogout = async () => {
   sidebarOpen.value = false
-  await authStore.logout()
-  router.push('/login')
+  
+  const result = await Swal.fire({
+    title: 'Sign Out?',
+    html: `
+      <div class="text-center">
+        <p class="text-slate-600 mb-1">Are you sure you want to sign out from the admin panel?</p>
+        <p class="text-sm text-slate-400">You will be redirected to the login page.</p>
+      </div>
+    `,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, sign out',
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: '#dc2626',
+    cancelButtonColor: '#64748b',
+    reverseButtons: true,
+    customClass: {
+      popup: 'rounded-2xl',
+      title: 'text-lg font-bold text-slate-800',
+      confirmButton: 'px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors',
+      cancelButton: 'px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors',
+    }
+  })
+
+  if (result.isConfirmed) {
+    // Show loading
+    Swal.fire({
+      title: 'Signing out...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading()
+      }
+    })
+
+    try {
+      await authStore.logout()
+      
+      // Show success
+      await Swal.fire({
+        icon: 'success',
+        title: 'Signed Out Successfully',
+        text: 'You have been logged out of the admin panel.',
+        timer: 2000,
+        showConfirmButton: false,
+        customClass: {
+          popup: 'rounded-2xl',
+        }
+      })
+      
+      router.push('/login')
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to sign out. Please try again.',
+        confirmButtonColor: '#dc2626',
+        customClass: {
+          popup: 'rounded-2xl',
+        }
+      })
+    }
+  }
 }
 
 onMounted(() => {

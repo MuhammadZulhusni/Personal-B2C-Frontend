@@ -14,23 +14,10 @@
 
       <!-- Login Form -->
       <div class="bg-white rounded-2xl shadow-xl p-8">
-        <!-- Error Alert -->
-        <div 
-          v-if="error" 
-          class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-start gap-3"
-        >
-          <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm text-red-700">{{ error }}</span>
-        </div>
-
         <form @submit.prevent="handleLogin" class="space-y-5">
           <!-- Email Field -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
             <div class="relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -42,16 +29,15 @@
                 type="email" 
                 placeholder="you@example.com"
                 required
-                class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
+                :disabled="loading"
+                class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
             </div>
           </div>
 
           <!-- Password Field -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
             <div class="relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -63,11 +49,13 @@
                 :type="showPassword ? 'text' : 'password'"
                 placeholder="••••••••"
                 required
-                class="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
+                :disabled="loading"
+                class="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
               <button 
                 type="button"
                 @click="showPassword = !showPassword"
+                :disabled="loading"
                 class="absolute inset-y-0 right-0 pr-3 flex items-center"
               >
                 <svg v-if="!showPassword" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -84,10 +72,10 @@
           <!-- Remember Me & Forgot Password -->
           <div class="flex items-center justify-between">
             <label class="flex items-center">
-              <input type="checkbox" class="rounded border-gray-300" />
+              <input type="checkbox" class="rounded border-gray-300" :disabled="loading" />
               <span class="ml-2 text-sm text-gray-600">Remember me</span>
             </label>
-            <RouterLink to="/forgot-password" class="text-sm text-slate-600 hover:text-slate-800">
+            <RouterLink to="/forgot-password" class="text-sm text-slate-600 hover:text-slate-800 font-medium transition-colors">
               Forgot password?
             </RouterLink>
           </div>
@@ -140,29 +128,85 @@
 import { ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import Swal from 'sweetalert2'
+import 'sweetalert2/dist/sweetalert2.min.css'
 
 const authStore = useAuthStore()
 const router = useRouter()
 
 const form = ref({ email: '', password: '' })
-const error = ref('')
 const loading = ref(false)
 const showPassword = ref(false)
 
 const handleLogin = async () => {
-  error.value = ''
+  // Basic validation
+  if (!form.value.email || !form.value.password) {
+    await Swal.fire({
+      icon: 'warning',
+      title: 'Missing Fields',
+      text: 'Please fill in both email and password.',
+      confirmButtonColor: '#1e293b',
+      confirmButtonText: 'OK',
+    })
+    return
+  }
+
   loading.value = true
   
   try {
     await authStore.login(form.value)
     
+    // Success
+    await Swal.fire({
+      icon: 'success',
+      title: 'Login Successful',
+      text: 'Welcome back!',
+      timer: 1500,
+      showConfirmButton: false,
+    })
+    
+    // Redirect
     if (authStore.user?.role === 'admin') {
       router.push('/admin')
     } else {
       router.push('/')
     }
+    
   } catch (e: any) {
-    error.value = e.response?.data?.message || 'Invalid email or password'
+    console.log('Login error caught:', e)
+    
+    // The API interceptor already handles the 401 redirect for non-login endpoints
+    // So if we get here, it's a 401 from the login endpoint itself (wrong credentials)
+    if (e?.response?.status === 401) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Credentials',
+        text: 'The email or password you entered is incorrect. Please try again.',
+        confirmButtonColor: '#dc2626',
+        confirmButtonText: 'Try Again',
+      })
+    } else if (e?.response?.status === 422) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Validation Error',
+        text: e.response.data.message || 'Please check your input.',
+        confirmButtonColor: '#f59e0b',
+      })
+    } else if (!e?.response) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Connection Error',
+        text: 'Unable to connect to the server. Please check your internet connection.',
+        confirmButtonColor: '#dc2626',
+      })
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: e.response?.data?.message || 'Something went wrong. Please try again.',
+        confirmButtonColor: '#dc2626',
+      })
+    }
   } finally {
     loading.value = false
   }

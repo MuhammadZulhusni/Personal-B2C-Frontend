@@ -39,7 +39,7 @@
         <!-- Logged in: regular user -->
         <template v-if="authStore.isLoggedIn && !isAdmin">
           <span class="greeting">Hi, {{ authStore.user?.name?.split(' ')[0] }} 👋</span>
-          <button class="btn-logout" @click="handleLogout">Logout</button>
+          <button class="btn-logout" @click="confirmLogout">Logout</button>
         </template>
 
         <!-- Logged in: admin -->
@@ -108,7 +108,7 @@
                 <p class="mobile-user-role">Customer</p>
               </div>
             </div>
-            <button class="mobile-logout" @click="handleLogout">
+            <button class="mobile-logout" @click="confirmLogout">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
               Logout
             </button>
@@ -126,7 +126,7 @@
             <RouterLink to="/admin" class="mobile-admin-btn" @click="isOpen = false">
               Admin Panel →
             </RouterLink>
-            <button class="mobile-logout" @click="handleLogout">
+            <button class="mobile-logout" @click="confirmLogout">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
               Logout
             </button>
@@ -159,6 +159,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
+import Swal from 'sweetalert2'
 
 const authStore = useAuthStore()
 const cartStore = useCartStore()
@@ -172,10 +173,71 @@ const handleScroll = () => {
   isScrolled.value = window.scrollY > 20
 }
 
-const handleLogout = () => {
-  authStore.logout()
-  router.push('/login')
+// Logout with SweetAlert2 confirmation
+const confirmLogout = async () => {
   isOpen.value = false
+  
+  const result = await Swal.fire({
+    title: 'Sign Out?',
+    html: `
+      <div class="text-center">
+        <p class="text-slate-600 mb-1">Are you sure you want to sign out?</p>
+        <p class="text-sm text-slate-400">You will be redirected to the login page.</p>
+      </div>
+    `,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, sign out',
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: '#dc2626',
+    cancelButtonColor: '#64748b',
+    reverseButtons: true,
+    customClass: {
+      popup: 'rounded-2xl',
+      title: 'text-lg font-bold text-slate-800',
+      confirmButton: 'px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors',
+      cancelButton: 'px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors',
+    }
+  })
+
+  if (result.isConfirmed) {
+    // Show loading
+    Swal.fire({
+      title: 'Signing out...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading()
+      }
+    })
+
+    try {
+      await authStore.logout()
+      
+      // Show success
+      await Swal.fire({
+        icon: 'success',
+        title: 'Signed Out Successfully',
+        text: 'You have been logged out of your account.',
+        timer: 2000,
+        showConfirmButton: false,
+        customClass: {
+          popup: 'rounded-2xl',
+        }
+      })
+      
+      router.push('/login')
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to sign out. Please try again.',
+        confirmButtonColor: '#dc2626',
+        customClass: {
+          popup: 'rounded-2xl',
+        }
+      })
+    }
+  }
 }
 
 onMounted(() => {
@@ -185,6 +247,7 @@ onMounted(() => {
 onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 </script>
 
+<!-- Keep all existing styles unchanged -->
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap');
 
@@ -202,7 +265,6 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   transition: background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
-/* When scrolled: fully opaque with shadow */
 .navbar--scrolled {
   background: #ffffff;
   color: #0f172a;
@@ -220,7 +282,6 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   gap: 2rem;
 }
 
-/* ── Brand ───────────────────────────────────────── */
 .brand {
   display: flex;
   align-items: center;
@@ -248,7 +309,6 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   color: inherit;
 }
 
-/* ── Desktop nav links ───────────────────────────── */
 .nav-links {
   display: none;
   align-items: center;
@@ -276,7 +336,6 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   position: relative;
 }
 
-/* On dark (not scrolled) */
 .navbar:not(.navbar--scrolled) .nav-link:hover {
   opacity: 1;
   background: #f1f5f9;
@@ -288,7 +347,6 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   background: #fef9ec;
 }
 
-/* On light (scrolled) */
 .navbar--scrolled .nav-link:hover {
   opacity: 1;
   background: #f1f5f9;
@@ -300,7 +358,6 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   background: #fef9ec;
 }
 
-/* Cart link */
 .cart-link { position: relative; }
 .cart-badge {
   display: inline-flex;
@@ -317,7 +374,6 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   line-height: 1;
 }
 
-/* ── Auth section ────────────────────────────────── */
 .nav-auth {
   display: none;
   align-items: center;
@@ -358,7 +414,6 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   text-decoration: none;
   transition: all 0.2s;
   letter-spacing: 0.01em;
-  /* Default on dark hero */
   background: linear-gradient(135deg, #b8860b, #d4a017);
   color: white;
   box-shadow: 0 2px 8px rgba(184,134,11,0.3);
@@ -368,7 +423,6 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   box-shadow: 0 4px 16px rgba(184,134,11,0.45);
 }
 
-/* On scrolled (light bg), register stays gold — already looks great */
 .navbar--scrolled .btn-register {
   background: linear-gradient(135deg, #b8860b, #d4a017);
   color: white;
@@ -419,7 +473,6 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   border-color: #fca5a5;
 }
 
-/* ── Mobile controls ─────────────────────────────── */
 .mobile-right {
   display: flex;
   align-items: center;
@@ -452,7 +505,6 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   font-size: 0.6rem;
 }
 
-/* Hamburger */
 .hamburger {
   display: flex;
   flex-direction: column;
@@ -480,7 +532,6 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 }
 .hamburger span:nth-child(2) { width: 75%; }
 
-/* Animate to X when open */
 .navbar--open .hamburger span:nth-child(1) {
   transform: translateY(7px) rotate(45deg);
 }
@@ -491,7 +542,6 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   transform: translateY(-7px) rotate(-45deg);
 }
 
-/* ── Mobile drawer ───────────────────────────────── */
 .mobile-backdrop {
   position: fixed;
   inset: 0;
@@ -635,6 +685,5 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 .fade-leave-active { transition: opacity 0.2s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-/* ── Body offset ─────────────────────────────────── */
 :global(body) { padding-top: 68px; }
 </style>

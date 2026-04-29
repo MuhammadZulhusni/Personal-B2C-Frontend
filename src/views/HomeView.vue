@@ -279,12 +279,12 @@
               <option value="">All Categories</option>
               <option v-for="cat in categoryCards" :key="cat.name" :value="cat.name">{{ cat.name }}</option>
             </select>
-            <select v-model="sortBy" class="filter-select">
+            <!-- <select v-model="sortBy" class="filter-select">
               <option value="newest">Newest</option>
               <option value="price_low">Price ↑</option>
               <option value="price_high">Price ↓</option>
               <option value="popular">Popular</option>
-            </select>
+            </select> -->
           </div>
           <div class="filters-right">
             <div class="view-toggle">

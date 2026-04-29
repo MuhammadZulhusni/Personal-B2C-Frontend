@@ -26,11 +26,19 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Only redirect on 401 if NOT the /user endpoint (initial auth check)
-    if (error.response?.status === 401 && !error.config.url?.includes('/user')) {
+    // CRITICAL FIX: Don't redirect on login, register, or forgot-password requests
+    const publicEndpoints = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-reset-token', '/user']
+    const isPublicEndpoint = publicEndpoints.some(endpoint => error.config.url?.includes(endpoint))
+    
+    if (error.response?.status === 401 && !isPublicEndpoint) {
       localStorage.removeItem('token')
-      window.location.href = '/login'
+      // Only redirect if not already on login page
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login'
+      }
     }
+    
+    // Always reject so components can handle errors
     return Promise.reject(error)
   }
 )

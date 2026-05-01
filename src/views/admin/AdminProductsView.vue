@@ -38,7 +38,7 @@
           v-model="categoryFilter"
           class="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-auto text-sm bg-white"
         >
-          <option value="">📂 All Categories</option>
+          <option value="">All Categories</option>
           <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
         </select>
         
@@ -47,10 +47,10 @@
           v-model="stockFilter"
           class="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-auto text-sm bg-white"
         >
-          <option value="">📦 All Stock</option>
-          <option value="in_stock">✅ In Stock</option>
-          <option value="low_stock">⚠️ Low Stock</option>
-          <option value="out_of_stock">❌ Out of Stock</option>
+          <option value="">All Stock</option>
+          <option value="in_stock">In Stock</option>
+          <option value="low_stock">Low Stock</option>
+          <option value="out_of_stock">Out of Stock</option>
         </select>
       </div>
 
@@ -59,12 +59,12 @@
         <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Active Filters:</span>
         
         <span v-if="searchQuery" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200">
-          🔍 "{{ searchQuery }}"
+          "{{ searchQuery }}"
           <button @click="searchQuery = ''" class="hover:text-blue-900 ml-1">×</button>
         </span>
         
         <span v-if="categoryFilter" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 text-xs font-medium rounded-full border border-purple-200">
-          📂 {{ categoryFilter }}
+          {{ categoryFilter }}
           <button @click="categoryFilter = ''" class="hover:text-purple-900 ml-1">×</button>
         </span>
         
@@ -158,13 +158,13 @@
               class="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors"
               @click="openModal(product)"
             >
-              ✏️ Edit
+              Edit
             </button>
             <button 
               class="flex-1 px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium rounded-xl transition-colors"
               @click="confirmDelete(product)"
             >
-              🗑 Delete
+              Delete
             </button>
           </div>
         </div>
@@ -313,19 +313,19 @@ const openModal = (product: Product | null = null) => {
   const isEdit = product !== null
 
   Swal.fire({
-    title: isEdit ? '✏️ Edit Product' : '✨ Add New Product',
+    title: isEdit ? 'Edit Product' : 'Add New Product',
     html: `
       <div style="text-align: left; display: flex; flex-direction: column; gap: 1rem;">
         <div>
           <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em;">
-            🏷️ Product Name <span style="color: #ef4444;">*</span>
+            Product Name <span style="color: #ef4444;">*</span>
           </label>
           <input id="swal-name" class="swal2-input" style="width: 100%; margin: 0;" placeholder="e.g., Wireless Headphones Pro" value="${product?.name ?? ''}">
         </div>
         
         <div>
           <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em;">
-            📂 Category <span style="color: #ef4444;">*</span>
+            Category <span style="color: #ef4444;">*</span>
           </label>
           <select id="swal-category" class="swal2-input" style="width: 100%; margin: 0;">
             <option value="">Select category...</option>
@@ -335,7 +335,7 @@ const openModal = (product: Product | null = null) => {
         
         <div>
           <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em;">
-            📝 Description
+            Description
           </label>
           <textarea id="swal-description" class="swal2-textarea" style="width: 100%; margin: 0; resize: none;" placeholder="Product description..." rows="3">${product?.description ?? ''}</textarea>
         </div>
@@ -343,13 +343,13 @@ const openModal = (product: Product | null = null) => {
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
           <div>
             <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em;">
-              💰 Price (RM) <span style="color: #ef4444;">*</span>
+              Price (RM) <span style="color: #ef4444;">*</span>
             </label>
             <input id="swal-price" class="swal2-input" style="width: 100%; margin: 0;" type="number" step="0.01" min="0" placeholder="0.00" value="${product?.price ?? ''}">
           </div>
           <div>
             <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em;">
-              📦 Stock <span style="color: #ef4444;">*</span>
+              Stock <span style="color: #ef4444;">*</span>
             </label>
             <input id="swal-stock" class="swal2-input" style="width: 100%; margin: 0;" type="number" min="0" placeholder="0" value="${product?.stock ?? ''}">
           </div>
@@ -357,14 +357,14 @@ const openModal = (product: Product | null = null) => {
         
         <div>
           <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em;">
-            🖼️ Image URL
+            Image URL
           </label>
           <input id="swal-image" class="swal2-input" style="width: 100%; margin: 0;" placeholder="https://example.com/image.jpg" value="${product?.image ?? ''}">
         </div>
       </div>
     `,
     showCancelButton: true,
-    confirmButtonText: isEdit ? '💾 Update Product' : '🚀 Create Product',
+    confirmButtonText: isEdit ? 'Update Product' : 'Create Product',
     cancelButtonText: 'Cancel',
     confirmButtonColor: '#2563eb',
     cancelButtonColor: '#64748b',

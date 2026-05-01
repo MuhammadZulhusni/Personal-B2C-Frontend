@@ -32,9 +32,6 @@
               <div class="hero-actions">
                 <button @click="scrollToProducts" class="btn-primary">
                   <span>Shop Now</span>
-                  <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
                 </button>
                 <button class="btn-ghost">Explore Deals</button>
               </div>
@@ -118,7 +115,6 @@
               <p class="cat-name">{{ cat.name }}</p>
               <p class="cat-count">{{ cat.count > 0 ? `${cat.count} items` : '—' }}</p>
             </div>
-            <div class="cat-arrow">→</div>
           </div>
         </div>
       </div>
@@ -140,7 +136,7 @@
             <span class="countdown-label">{{ key }}</span>
           </div>
         </div>
-        <button class="btn-flash">Shop the Sale →</button>
+        <button class="btn-flash">Shop the Sale</button>
       </div>
       <div class="flash-deco flash-deco-1"></div>
       <div class="flash-deco flash-deco-2"></div>

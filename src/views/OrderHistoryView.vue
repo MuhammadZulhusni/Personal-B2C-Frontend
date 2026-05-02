@@ -147,7 +147,7 @@
         <!-- Order Actions -->
         <div class="px-5 py-4 border-t border-gray-200 flex flex-wrap gap-3">
           <button 
-            @click="viewOrderDetails(order.id)"
+            @click="openOrderDetailModal(order)"
             class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -158,15 +158,7 @@
           </button>
           
           <button 
-            v-if="order.status === 'pending'"
-            @click="cancelOrder(order.id)"
-            class="px-4 py-2 border border-red-300 text-red-600 hover:bg-red-50 text-sm font-medium rounded-lg transition-colors"
-          >
-            Cancel Order
-          </button>
-          
-          <button 
-            @click="trackOrder(order.id)"
+            @click="openTrackOrderModal(order)"
             class="px-4 py-2 border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -176,13 +168,11 @@
           </button>
           
           <button 
-            @click="reorderItems(order)"
-            class="px-4 py-2 border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ml-auto"
+            v-if="order.status === 'pending'"
+            @click="cancelOrder(order.id)"
+            class="px-4 py-2 border border-red-300 text-red-600 hover:bg-red-50 text-sm font-medium rounded-lg transition-colors ml-auto"
           >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Buy Again
+            Cancel Order
           </button>
         </div>
       </div>
@@ -194,7 +184,8 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/api'
-import { useCartStore } from '@/stores/cart'
+import Swal from 'sweetalert2'
+import 'sweetalert2/dist/sweetalert2.min.css'
 
 interface OrderItem {
   id: number
@@ -213,15 +204,17 @@ interface Order {
   shipping_address: string
   created_at: string
   items: OrderItem[]
+  transaction_id?: string
+  payment_method?: string
+  paid_at?: string
+  notes?: string
 }
 
 const router = useRouter()
-const cartStore = useCartStore()
 const orders = ref<Order[]>([])
 const loading = ref(true)
 const error = ref('')
 
-// Status color mapping
 const statusClasses: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700',
   processing: 'bg-blue-100 text-blue-700',
@@ -229,7 +222,6 @@ const statusClasses: Record<string, string> = {
   cancelled: 'bg-red-100 text-red-700',
 }
 
-// Computed stats
 const processingCount = computed(() => {
   return orders.value.filter(order => order.status === 'processing' || order.status === 'pending').length
 })
@@ -243,7 +235,6 @@ const totalSpent = computed(() => {
   return formatPrice(total)
 })
 
-// Helper functions
 const formatPrice = (price: any): string => {
   const numPrice = typeof price === 'string' ? parseFloat(price) : price
   return isNaN(numPrice) ? '0.00' : numPrice.toFixed(2)
@@ -251,9 +242,13 @@ const formatPrice = (price: any): string => {
 
 const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleDateString('en-MY', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+    year: 'numeric', month: 'long', day: 'numeric',
+  })
+}
+
+const formatDateTime = (dateStr: string) => {
+  return new Date(dateStr).toLocaleDateString('en-MY', {
+    year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
   })
 }
 
@@ -262,10 +257,192 @@ const handleImageError = (event: Event) => {
   img.src = 'https://via.placeholder.com/64x64?text=Product'
 }
 
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+})
+
+// ── Order Detail Modal ───────────────────────
+const openOrderDetailModal = (order: Order) => {
+  const itemsHtml = order.items.map(item => `
+    <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
+      <img src="${item.product?.image || 'https://via.placeholder.com/50'}" 
+           alt="${item.product?.name || 'Product'}" 
+           style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;" />
+      <div style="flex: 1;">
+        <p style="font-weight: 600; color: #0f172a; font-size: 14px;">${item.product?.name || 'Product Unavailable'}</p>
+        <p style="color: #64748b; font-size: 13px;">RM ${formatPrice(item.price)} × ${item.quantity}</p>
+      </div>
+      <p style="font-weight: 700; color: #0f172a;">RM ${formatPrice(Number(item.price) * Number(item.quantity))}</p>
+    </div>
+  `).join('')
+
+  Swal.fire({
+    title: `Order #${order.id}`,
+    html: `
+      <div style="text-align: left;">
+        <!-- Status Badge -->
+        <div style="margin-bottom: 16px;">
+          <span style="display: inline-block; padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 600; text-transform: capitalize; 
+            ${order.status === 'completed' ? 'background: #dcfce7; color: #16a34a;' : 
+              order.status === 'pending' ? 'background: #fef3c7; color: #d97706;' : 
+              order.status === 'processing' ? 'background: #dbeafe; color: #2563eb;' : 
+              'background: #fee2e2; color: #dc2626;'}">
+            ${order.status}
+          </span>
+        </div>
+
+        <!-- Order Info Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; padding: 14px; background: #f8fafc; border-radius: 10px;">
+          <div>
+            <p style="font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Order Date</p>
+            <p style="font-size: 14px; color: #0f172a; font-weight: 500;">${formatDateTime(order.created_at)}</p>
+          </div>
+          <div>
+            <p style="font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Payment Method</p>
+            <p style="font-size: 14px; color: #0f172a; font-weight: 500; text-transform: capitalize;">${order.payment_method || 'N/A'}</p>
+          </div>
+          <div>
+            <p style="font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Transaction ID</p>
+            <p style="font-size: 14px; color: #0f172a; font-weight: 500; font-family: monospace;">${order.transaction_id || 'N/A'}</p>
+          </div>
+          <div>
+            <p style="font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Paid At</p>
+            <p style="font-size: 14px; color: #0f172a; font-weight: 500;">${order.paid_at ? formatDateTime(order.paid_at) : 'Not paid yet'}</p>
+          </div>
+        </div>
+
+        <!-- Items -->
+        <h4 style="font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">Items (${order.items.length})</h4>
+        <div style="margin-bottom: 16px;">
+          ${itemsHtml}
+        </div>
+
+        <!-- Total -->
+        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-top: 2px solid #e2e8f0; margin-bottom: 12px;">
+          <span style="font-weight: 600; color: #0f172a;">Total Amount</span>
+          <span style="font-size: 18px; font-weight: 700; color: #0f172a;">RM ${formatPrice(order.total_amount)}</span>
+        </div>
+
+        <!-- Shipping Address -->
+        <div style="padding: 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px;">
+          <p style="font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 4px;">Shipping Address</p>
+          <p style="font-size: 14px; color: #0f172a;">${order.shipping_address}</p>
+        </div>
+
+        ${order.notes ? `
+        <div style="padding: 12px; background: #fef9ec; border: 1px solid #fde68a; border-radius: 8px;">
+          <p style="font-size: 11px; color: #92400e; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 4px;">Notes</p>
+          <p style="font-size: 14px; color: #78350f;">${order.notes}</p>
+        </div>
+        ` : ''}
+      </div>
+    `,
+    width: '600px',
+    showCloseButton: true,
+    showConfirmButton: false,
+    customClass: {
+      popup: 'rounded-2xl',
+      title: 'text-lg font-bold text-slate-800',
+    },
+  })
+}
+
+// ── Track Order Modal ─────────────────────────
+const openTrackOrderModal = (order: Order) => {
+  const steps = [
+    { label: 'Order Placed', date: order.created_at, done: true },
+    { label: 'Payment Confirmed', date: order.paid_at, done: !!order.paid_at },
+    { label: 'Processing', date: order.status === 'processing' || order.status === 'completed' ? order.created_at : null, done: order.status === 'processing' || order.status === 'completed' },
+    { label: 'Shipped', date: order.status === 'completed' ? order.paid_at : null, done: order.status === 'completed' },
+    { label: 'Delivered', date: order.status === 'completed' ? order.paid_at : null, done: order.status === 'completed' },
+  ]
+
+  const stepsHtml = steps.map((step, index) => `
+    <div style="display: flex; gap: 12px; margin-bottom: ${index < steps.length - 1 ? '24px' : '0'};">
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <div style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+          ${step.done ? 'background: #16a34a; color: white;' : 'background: #f1f5f9; color: #94a3b8;'}">
+          ${step.done ? '✓' : index + 1}
+        </div>
+        ${index < steps.length - 1 ? `<div style="width: 2px; flex: 1; min-height: 24px; background: ${step.done ? '#16a34a' : '#e2e8f0'}; margin-top: 4px;"></div>` : ''}
+      </div>
+      <div>
+        <p style="font-weight: 600; color: ${step.done ? '#0f172a' : '#94a3b8'}; font-size: 14px;">${step.label}</p>
+        <p style="font-size: 12px; color: #64748b;">${step.date ? formatDateTime(step.date) : 'Pending'}</p>
+      </div>
+    </div>
+  `).join('')
+
+  Swal.fire({
+    title: `Track Order #${order.id}`,
+    html: `
+      <div style="text-align: left; padding: 10px 0;">
+        <div style="margin-bottom: 20px;">
+          <span style="display: inline-block; padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 600; text-transform: capitalize; 
+            ${order.status === 'completed' ? 'background: #dcfce7; color: #16a34a;' : 
+              order.status === 'pending' ? 'background: #fef3c7; color: #d97706;' : 
+              order.status === 'processing' ? 'background: #dbeafe; color: #2563eb;' : 
+              'background: #fee2e2; color: #dc2626;'}">
+            ${order.status}
+          </span>
+        </div>
+        ${stepsHtml}
+      </div>
+    `,
+    width: '500px',
+    showCloseButton: true,
+    showConfirmButton: false,
+    customClass: {
+      popup: 'rounded-2xl',
+      title: 'text-lg font-bold text-slate-800',
+    },
+  })
+}
+
+// ── Cancel Order ─────────────────────────────
+const cancelOrder = async (orderId: number) => {
+  const result = await Swal.fire({
+    title: 'Cancel Order?',
+    html: `<p class="text-slate-600">Are you sure you want to cancel <strong>Order #${orderId}</strong>?</p>
+           <p class="text-sm text-slate-500 mt-2">This action cannot be undone.</p>`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, cancel it',
+    cancelButtonText: 'Keep it',
+    confirmButtonColor: '#dc2626',
+    cancelButtonColor: '#64748b',
+    reverseButtons: true,
+    customClass: {
+      popup: 'rounded-2xl',
+      confirmButton: 'px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors',
+      cancelButton: 'px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors',
+    },
+  })
+
+  if (result.isConfirmed) {
+    try {
+      await api.put(`/orders/${orderId}/cancel`)
+      await fetchOrders()
+      Toast.fire({ icon: 'success', title: 'Order cancelled successfully' })
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to cancel order. Please try again.',
+        confirmButtonColor: '#dc2626',
+        customClass: { popup: 'rounded-2xl' },
+      })
+    }
+  }
+}
+
 const fetchOrders = async () => {
   loading.value = true
   error.value = ''
-  
   try {
     const { data } = await api.get('/orders')
     orders.value = data
@@ -274,45 +451,6 @@ const fetchOrders = async () => {
   } finally {
     loading.value = false
   }
-}
-
-const viewOrderDetails = (orderId: number) => {
-  // Navigate to order details page or open modal
-  console.log('View order details:', orderId)
-  // router.push(`/orders/${orderId}`)
-}
-
-const cancelOrder = async (orderId: number) => {
-  if (!confirm('Are you sure you want to cancel this order?')) return
-  
-  try {
-    await api.put(`/orders/${orderId}/cancel`)
-    await fetchOrders()
-  } catch (error) {
-    console.error('Failed to cancel order:', error)
-    alert('Failed to cancel order. Please try again.')
-  }
-}
-
-const trackOrder = (orderId: number) => {
-  // Navigate to tracking page or open modal
-  console.log('Track order:', orderId)
-  // router.push(`/orders/${orderId}/track`)
-}
-
-const reorderItems = (order: Order) => {
-  order.items.forEach(item => {
-    if (item.product) {
-      cartStore.addToCart({
-        id: item.product as any,
-        name: item.product.name,
-        price: item.price,
-        image: item.product.image,
-        quantity: item.quantity
-      })
-    }
-  })
-  router.push('/cart')
 }
 
 onMounted(() => fetchOrders())

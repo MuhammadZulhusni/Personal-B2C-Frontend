@@ -114,7 +114,7 @@
           <div>
             <p class="section-eyebrow">✨ Powered by AI</p>
             <h2 class="section-title">Shop the Vibe</h2>
-            <p class="ai-subtitle">Tell us your mood or occasion — our AI stylist will handpick products just for you.</p>
+            <p class="ai-subtitle">Tell us your mood or occasion our AI stylist will handpick products just for you.</p>
           </div>
         </div>
         <div class="vibe-grid">
